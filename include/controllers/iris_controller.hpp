@@ -13,17 +13,22 @@ class iris_controller
 {
 private:
     ros::NodeHandle nh;
-    ros::Publisher velo_pub;
+    ros::Publisher pose_pub;
+    ros::Publisher waypoint_pub;
     ros::Subscriber pose_sub;
     ros::Subscriber state_sub;
+    ros::Subscriber waypoint_sub;
     ros::ServiceClient arming_client;
     ros::ServiceClient set_mode_client;
     ros::Rate rate = 20.0;
 
     geometry_msgs::PoseStamped pose;
+    geometry_msgs::PoseStamped waypoint;
     mavros_msgs::State current_state;
+
     void pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg);
     void state_cb(const mavros_msgs::State::ConstPtr& msg);
+    void waypoint_cb(const geometry_msgs::PoseStamped::ConstPtr& msg);
     
     int pose_error = 0.01;
 public:
@@ -45,12 +50,16 @@ iris_controller::iris_controller(ros::NodeHandle nh, ros::Rate rate = 20.0)
             ("/uav0/mavros/local_position/pose", 10, &iris_controller::pose_cb, this);
     this->state_sub = nh.subscribe<mavros_msgs::State>
             ("/uav0/mavros/state", 10, &iris_controller::state_cb, this);
+    this->waypoint_sub = nh.subscribe<geometry_msgs::PoseStamped>
+            ("/waypoints", 10, &iris_controller::waypoint_cb, this);
     this->arming_client = nh.serviceClient<mavros_msgs::CommandBool>
             ("/uav0/mavros/cmd/arming");
     this->set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
             ("/uav0/mavros/set_mode");
-    this->velo_pub = nh.advertise<geometry_msgs::Twist>
-            ("/uav0/mavros/setpoint_velocity/cmd_vel_unstamped", 10);
+    this->pose_pub = nh.advertise<geometry_msgs::PoseStamped>
+            ("/uav0/mavros/setpoint_position/local", 10);
+    this->waypoint_pub = nh.advertise<geometry_msgs::PoseStamped>
+            ("/waypoints", 10);
 }
 
 iris_controller::~iris_controller()
@@ -67,6 +76,11 @@ void iris_controller::pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
     pose = *msg;
 }
 
+void iris_controller::waypoint_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+    waypoint = *msg;
+}
+
 int distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 {
     return sqrt(pow(a.pose.position.x - b.pose.position.x, 2) + pow(a.pose.position.y - b.pose.position.y, 2) + pow(a.pose.position.z - b.pose.position.z, 2));
@@ -74,32 +88,29 @@ int distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 
 void iris_controller::go(geometry_msgs::PoseStamped target)
 {
-    geometry_msgs::Twist velo;
-    int Kv = 1;
-    while (ros::ok() && distance(pose, target) > pose_error)
-    {
-        velo.linear.x = Kv * (target.pose.position.x - pose.pose.position.x);
-        velo.linear.y = Kv * (target.pose.position.y - pose.pose.position.y);
-        velo.linear.z = Kv * (target.pose.position.z - pose.pose.position.z);
-        velo_pub.publish(velo);
-        ros::spinOnce();
-        rate.sleep();
-    }
-    ROS_INFO("x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+    waypoint_pub.publish(target);
 }
 
 void iris_controller::takeoff(int altitude)
 {
-    ROS_INFO("Connecting to FCU");
+    // wait for FCU connection
     while(ros::ok() && !current_state.connected){
         ros::spinOnce();
         rate.sleep();
     }
 
-    geometry_msgs::Twist velo;
-    velo.linear.x = 0;
-    velo.linear.y = 0;
-    velo.linear.z = altitude;
+    geometry_msgs::PoseStamped pose;
+    pose.pose.position.x = 0;
+    pose.pose.position.y = 0;
+    pose.pose.position.z = 2;
+
+    //send a few setpoints before starting
+    for(int i = 100; ros::ok() && i > 0; --i){
+        pose_pub.publish(pose);
+        waypoint_pub.publish(pose);
+        ros::spinOnce();
+        rate.sleep();
+    }
 
     mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "OFFBOARD";
@@ -109,8 +120,10 @@ void iris_controller::takeoff(int altitude)
 
     ros::Time last_request = ros::Time::now();
 
-    ROS_INFO("arming");
     while(ros::ok()){
+        
+        waypoint_pub.publish(waypoint);
+
         if( current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(5.0))){
             if( set_mode_client.call(offb_set_mode) &&
@@ -129,24 +142,11 @@ void iris_controller::takeoff(int altitude)
             }
         }
 
-        velo.linear.x = 0 - pose.pose.position.x;
-        velo.linear.y = 0 - pose.pose.position.y;
-        velo.linear.z = altitude - pose.pose.position.z;
-        velo_pub.publish(velo);
-        
+        pose_pub.publish(waypoint);
 
         ros::spinOnce();
         rate.sleep();
     }
-}
-
-void iris_controller::land()
-{
-    geometry_msgs::Twist velo;
-    velo.linear.x = 0;
-    velo.linear.y = 0;
-    velo.linear.z = 0;
-    velo_pub.publish(velo);
 }
 
 geometry_msgs::PoseStamped iris_controller::getPose()

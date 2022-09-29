@@ -4,10 +4,7 @@
 
     <node pkg="quadcopter_controller" type="simulation_setup.py" name="simulation_setup" output="screen"/>
 
-    <!--node name="obstacle_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -file /home/emirhan/quadcopter_controller/src/quadcopter_controller-lib/launch/obstacle.urdf -model my_obstacle  -x 0 -y 0 -z 0"/-->
- 
-    <node pkg="quadcopter_controller" type="takeoff" name="takeoff" output="screen"/>
+    <node pkg="quadcopter_controller" type="controller" name="controller" output="screen"/>
 
-    <!-- <node pkg="quadcopter_controller" type="motion_planner" name="motion_planner" output="screen"/> -->
 
 </launch>

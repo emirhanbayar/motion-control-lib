@@ -213,9 +213,6 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(takeoff src/takeoff.cpp)
-target_link_libraries(takeoff ${catkin_LIBRARIES})
-
 # Find OMPL and Eigen3
 find_library(ompl REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -226,6 +223,9 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -L/usr/local/lib -lompl")
 link_directories(/usr/local/lib)
 link_directories(/usr/local/lib/ompl)
 
+
+add_executable(controller src/controller.cpp)
+target_link_libraries(controller ${catkin_LIBRARIES})
 
 add_executable(motion_planner src/motion_planner.cpp)
 target_link_libraries(motion_planner ${catkin_LIBRARIES}

@@ -7,6 +7,7 @@
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+#include <ompl/base/PlannerTerminationCondition.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/SimpleSetup.h>
@@ -29,23 +30,42 @@ private:
     
     std::vector<geometry_msgs::PoseStamped> waypoints;
     
+    geometry_msgs::PoseStamped current_pose;
     geometry_msgs::PoseStamped start;
     geometry_msgs::PoseStamped goal;
 
+    ros::Subscriber pose_sub;
+    ros::Publisher waypoint_pub;
+
+    void pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg);
     bool isStateValid(const ob::State *state);
 
 public:
-    OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal);
+    OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped goal);
     ~OMPLPlanner();
-    std::vector<geometry_msgs::PoseStamped>& getWaypoints(); 
+    std::vector<geometry_msgs::PoseStamped>& getWaypoints();
+    void navigate();
 };
 
+void OMPLPlanner::pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+    this->current_pose = *msg;
+}
 
-OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal)
+OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped goal)
 {
     this->nh = nh;
-    this->start = start;
     this->goal = goal;
+    this->pose_sub = nh.subscribe<geometry_msgs::PoseStamped>
+            ("/uav0/mavros/local_position/pose", 10, &OMPLPlanner::pose_cb, this);
+    this->waypoint_pub = nh.advertise<geometry_msgs::PoseStamped>
+            ("/waypoints", 10);
+
+    while (this->current_pose.header.seq == 0)
+    {
+        ros::spinOnce();
+    }
+    this->start = current_pose;
 
     // Get obstacle parameters
     nh.getParam("obstacle_xs", obstacle_xs);
@@ -102,9 +122,9 @@ OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped start, g
     ompl_start.print(std::cout);
     // perform setup steps for the planner
     planner->setup();
- 
+
     // attempt to solve the problem within one second of planning time
-    ob::PlannerStatus solved = planner->ob::Planner::solve(10.0);
+    ob::PlannerStatus solved = planner->ob::Planner::solve(30);
  
     if (solved)
     {
@@ -121,11 +141,13 @@ OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped start, g
             const ob::SE3StateSpace::StateType *se3state = waypoints[i]->as<ob::SE3StateSpace::StateType>();
             const ob::RealVectorStateSpace::StateType *pos = se3state->as<ob::RealVectorStateSpace::StateType>(0);
             const ob::SO3StateSpace::StateType *rot = se3state->as<ob::SO3StateSpace::StateType>(1);
-            double x = pos->values[0];
-            double y = pos->values[1];
-            double z = pos->values[2];
+            geometry_msgs::PoseStamped waypoint;
+            waypoint.pose.position.x = pos->values[0];
+            waypoint.pose.position.y = pos->values[1];
+            waypoint.pose.position.z = pos->values[2];
+            this->waypoints.push_back(waypoint);
 
-            std::cout << "Waypoint " << i << ": " << x << ", " << y << ", " << z << std::endl;
+            ROS_INFO("waypoint: %f, %f, %f", waypoint.pose.position.x, waypoint.pose.position.y, waypoint.pose.position.z);
         }
     }
 
@@ -158,7 +180,7 @@ bool OMPLPlanner::isStateValid(const ob::State *state)
         double x_diff = x - obstacle_xs[i];
         double y_diff = y - obstacle_ys[i];
         double distance = sqrt(x_diff * x_diff + y_diff * y_diff);
-        if (z < obstacle_heights[i] && distance < obstacle_radii[i])
+        if ((z < obstacle_heights[i] && distance < obstacle_radii[i]) || z < 0.1)
         {
             return false;
         }
@@ -169,6 +191,24 @@ bool OMPLPlanner::isStateValid(const ob::State *state)
 std::vector<geometry_msgs::PoseStamped>& OMPLPlanner::getWaypoints()
 {
     return waypoints;
+}
+
+int distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
+{
+    return sqrt(pow(a.pose.position.x - b.pose.position.x, 2) + pow(a.pose.position.y - b.pose.position.y, 2) + pow(a.pose.position.z - b.pose.position.z, 2));
+}
+
+void OMPLPlanner::navigate()
+{
+        for (int i = 0; i < waypoints.size(); i++)
+        {
+            while(distance(waypoints[i], current_pose) > 0.1)
+            {
+                waypoint_pub.publish(waypoints[i]);
+            }
+        }
+
+        waypoint_pub.publish(goal);
 }
 
 #endif
