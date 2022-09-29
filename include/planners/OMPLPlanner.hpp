@@ -3,6 +3,8 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <gazebo_msgs/SpawnModel.h>
+
 
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
@@ -78,8 +80,8 @@ OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped goal)
  
     // set the bounds for the R^3 part of SE(3)
     ob::RealVectorBounds bounds(3);
-    bounds.setLow(-100);
-    bounds.setHigh(100);
+    bounds.setLow(-10);
+    bounds.setHigh(10);
  
     space->setBounds(bounds);
  
@@ -147,6 +149,14 @@ OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped goal)
             waypoint.pose.position.z = pos->values[2];
             this->waypoints.push_back(waypoint);
 
+            // // spawn waypoint in gazebo
+            // std::string model_name = "waypoint" + std::to_string(i);
+            // std::string model_path = "src/quadcopter_motion_simulation/urdf/waypoint.urdf";
+            // // <node name="obstacle_spawn{}" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -file {} -model my_obstacle{}  -x {} -y {} -z {}"/> \n'.format(i, urdf_file.absolute(), i, obstacle_xs[i], obstacle_ys[i], 0)
+            // std::string model_command = "rosrun gazebo_ros spawn_model -urdf -f " + model_path + " -m " + model_name + " -x " + std::to_string(pos->values[0]) + " -y " + std::to_string(pos->values[1]) + " -z " + std::to_string(pos->values[2]);
+            // system(model_command.c_str());
+
+
             ROS_INFO("waypoint: %f, %f, %f", waypoint.pose.position.x, waypoint.pose.position.y, waypoint.pose.position.z);
         }
     }
@@ -180,7 +190,7 @@ bool OMPLPlanner::isStateValid(const ob::State *state)
         double x_diff = x - obstacle_xs[i];
         double y_diff = y - obstacle_ys[i];
         double distance = sqrt(x_diff * x_diff + y_diff * y_diff);
-        if ((z < obstacle_heights[i] && distance < obstacle_radii[i]) || z < 0.1)
+        if ((z < obstacle_heights[i] && distance < obstacle_radii[i] + 0.3) || z < 0.1)
         {
             return false;
         }
@@ -193,7 +203,7 @@ std::vector<geometry_msgs::PoseStamped>& OMPLPlanner::getWaypoints()
     return waypoints;
 }
 
-int distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
+float distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 {
     return sqrt(pow(a.pose.position.x - b.pose.position.x, 2) + pow(a.pose.position.y - b.pose.position.y, 2) + pow(a.pose.position.z - b.pose.position.z, 2));
 }
@@ -201,10 +211,12 @@ int distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 void OMPLPlanner::navigate()
 {
         for (int i = 0; i < waypoints.size(); i++)
-        {
+        {   
+            ROS_INFO("Going to waypoint %f %f %f", waypoints[i].pose.position.x, waypoints[i].pose.position.y, waypoints[i].pose.position.z);
             while(distance(waypoints[i], current_pose) > 0.1)
             {
                 waypoint_pub.publish(waypoints[i]);
+                ros::spinOnce();
             }
         }
 

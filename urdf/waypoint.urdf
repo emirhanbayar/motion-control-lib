@@ -1,0 +1,16 @@
+<!-- urdf file to mark a waypoint -->
+<robot name="waypoint">
+  <link name="waypoint_link">
+    <visual>
+      <geometry>
+        <sphere radius="0.1"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  <gazebo reference="waypoint_link">
+    <material>Gazebo/Red</material>
+  </gazebo>
+</robot>

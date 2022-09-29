@@ -64,30 +64,30 @@ for i in range(obstacle_count):
     urdf_file = Path(f"~/catkin_ws/src/quadcopter_motion_simulation/urdf/obstacle{i}.urdf").expanduser()
     urdf_file.touch(exist_ok=True)
     with urdf_file.open('w') as f:
-        f.write("""<robot name="obstacle">
+        f.write(f"""<robot name="obstacle">
         <link name="my_obstacle">
             <inertial>
-                <origin xyz="2 0 0" />
+                <origin xyz="0 0 {obstacle_heights[i]/2}" />
                 <mass value="10.0" />
-                <inertia  ixx="5.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
+                <inertia  ixx="0.0" ixy="0.0"  ixz="0.0"  iyy="0.0"  iyz="0.0"  izz="0.0" />
             </inertial>
             <visual>
-                <origin xyz="0 0 0"/>
+                <origin xyz="0 0 {obstacle_heights[i]/2}"/>
                 <geometry>
-                <cylinder radius="{}" length="{}"/>
+                <cylinder radius="{obstacle_radii[i]}" length="{obstacle_heights[i]}"/>
                 </geometry>
             </visual>
             <collision>
-                <origin xyz="2 0 1"/>
+                <origin xyz="0 0 {obstacle_heights[i]/2}"/>
                 <geometry>
-                <box size="1 1 2" />
+                <box size="0.1 0.1 0.1" />
                 </geometry>
             </collision>
         </link>
         <gazebo reference="my_obstacle">
             <material>Gazebo/Blue</material>
         </gazebo>
-    </robot>""".format(obstacle_radii[i], obstacle_heights[i]))
+    </robot>""")
     str += '<node name="obstacle_spawn{}" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -file {} -model my_obstacle{}  -x {} -y {} -z {}"/> \n'.format(i, urdf_file.absolute(), i, obstacle_xs[i], obstacle_ys[i], 0)
 str += "</launch>"
 

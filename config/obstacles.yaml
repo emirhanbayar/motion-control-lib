@@ -1,4 +1,5 @@
-obstacle_radii: [0.9, 0.9, 0.9, 0.9, 0.9, 0.9,]
-obstacle_heights: [7, 10, 4, 5, 6, 7]
-obstacle_xs: [0, 1, 2, 3, 4, 5,]
-obstacle_ys: [3, 3, 3, 3, 3, 3,]
+obstacle_radii: [1, 1, 1, 1, 1, 1, 1, 1, 1]
+obstacle_heights: [30, 30, 9, 9, 30, 30, 9, 9, 30]
+
+obstacle_xs: [-2, 0, 2, 4, -2,  0,  2,  4, -2]
+obstacle_ys: [ 2, 2, 2, 2, -2, -2, -2, -2,  0]

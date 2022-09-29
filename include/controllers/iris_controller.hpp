@@ -81,7 +81,7 @@ void iris_controller::waypoint_cb(const geometry_msgs::PoseStamped::ConstPtr& ms
     waypoint = *msg;
 }
 
-int distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
+float distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 {
     return sqrt(pow(a.pose.position.x - b.pose.position.x, 2) + pow(a.pose.position.y - b.pose.position.y, 2) + pow(a.pose.position.z - b.pose.position.z, 2));
 }

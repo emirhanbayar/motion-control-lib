@@ -9,9 +9,12 @@ int main(int argc, char **argv)
 
     geometry_msgs::PoseStamped goal;
 
-    goal.pose.position.x = 5;
-    goal.pose.position.y = 5;
-    goal.pose.position.z = 2;
+    std::cout << "Enter goal x: ";
+    std::cin >> goal.pose.position.x;
+    std::cout << "Enter goal y: ";
+    std::cin >> goal.pose.position.y;
+    std::cout << "Enter goal z: ";
+    std::cin >> goal.pose.position.z;
 
     OMPLPlanner planner(nh, goal);
 
