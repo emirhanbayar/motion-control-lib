@@ -129,8 +129,8 @@ void iris_controller::takeoff(int altitude)
             }
         }
 
-        velo.linear.x = 0;
-        velo.linear.y = 0;
+        velo.linear.x = 0 - pose.pose.position.x;
+        velo.linear.y = 0 - pose.pose.position.y;
         velo.linear.z = altitude - pose.pose.position.z;
         velo_pub.publish(velo);
         

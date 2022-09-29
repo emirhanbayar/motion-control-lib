@@ -6,7 +6,9 @@
 
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/SimpleSetup.h>
  
 #include <ompl/config.h>
@@ -37,6 +39,7 @@ public:
     ~OMPLPlanner();
     std::vector<geometry_msgs::PoseStamped>& getWaypoints(); 
 };
+
 
 OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal)
 {
@@ -69,30 +72,39 @@ OMPLPlanner::OMPLPlanner(ros::NodeHandle nh, geometry_msgs::PoseStamped start, g
     // create a random start state
     ROS_INFO("start: %f, %f, %f", start.pose.position.x, start.pose.position.y, start.pose.position.z);
     ob::ScopedState<> ompl_start(space);
+    ompl_start.random();
     ompl_start->as<ob::SE3StateSpace::StateType>()->setXYZ(start.pose.position.x, start.pose.position.y, start.pose.position.z);
- 
+    ompl_start->as<ob::SE3StateSpace::StateType>()->as<ob::SO3StateSpace::StateType>(1)->setIdentity();
+
     // create a random goal state
     ROS_INFO("goal: %f, %f, %f", goal.pose.position.x, goal.pose.position.y, goal.pose.position.z);
     ob::ScopedState<> ompl_goal(space);
+    ompl_goal.random();
     ompl_goal->as<ob::SE3StateSpace::StateType>()->setXYZ(goal.pose.position.x, goal.pose.position.y, goal.pose.position.z);
+    ompl_goal->as<ob::SE3StateSpace::StateType>()->as<ob::SO3StateSpace::StateType>(1)->setIdentity();
+
  
     // create a problem instance
     auto pdef(std::make_shared<ob::ProblemDefinition>(si));
- 
+    
+    // set a path length optimization objective
+    pdef->setOptimizationObjective(std::make_shared<ob::PathLengthOptimizationObjective>(si));
+
     // set the start and goal states
     pdef->setStartAndGoalStates(ompl_start, ompl_goal);
  
     // create a planner for the defined space
-    auto planner(std::make_shared<og::RRTConnect>(si));
+    auto planner(std::make_shared<og::RRTstar>(si));
  
     // set the problem we are trying to solve for the planner
     planner->setProblemDefinition(pdef);
- 
+    
+    ompl_start.print(std::cout);
     // perform setup steps for the planner
     planner->setup();
  
     // attempt to solve the problem within one second of planning time
-    ob::PlannerStatus solved = planner->ob::Planner::solve(1.0);
+    ob::PlannerStatus solved = planner->ob::Planner::solve(10.0);
  
     if (solved)
     {
@@ -148,11 +160,9 @@ bool OMPLPlanner::isStateValid(const ob::State *state)
         double distance = sqrt(x_diff * x_diff + y_diff * y_diff);
         if (z < obstacle_heights[i] && distance < obstacle_radii[i])
         {
-            ROS_INFO("State is in collision with obstacle %d", i);
             return false;
         }
     }
-    ROS_INFO("State is valid");
     return true;
 }
 

@@ -21,13 +21,13 @@ int main(int argc, char **argv)
 
     start = controller.getPose();
 
-    start.pose.position.x = 0;
-    start.pose.position.y = 0;
-    start.pose.position.z = 0;
+    start.pose.position.x = 0.0;
+    start.pose.position.y = 0.0;
+    start.pose.position.z = 0.0;
 
-    goal.pose.position.x = 0.1;
-    goal.pose.position.y = 0.1;
-    goal.pose.position.z = 0.1;
+    goal.pose.position.x = 5;
+    goal.pose.position.y = 5;
+    goal.pose.position.z = 2;
 
     OMPLPlanner planner(nh, start, goal);
 

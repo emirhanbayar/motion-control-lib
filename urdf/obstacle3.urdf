@@ -8,7 +8,7 @@
             <visual>
                 <origin xyz="0 0 0"/>
                 <geometry>
-                <cylinder radius="0.3" length="3"/>
+                <cylinder radius="0.9" length="5"/>
                 </geometry>
             </visual>
             <collision>
