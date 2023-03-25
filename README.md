@@ -162,7 +162,12 @@ Currently, there is only one controller (PX4 for Iris) and motion planner (RRT* 
 
 Here is the graph of information flow:
 
-![image](./images/Information-Flow.png)
+
+![image](./images/Info-Flow.png)
+
+Where ellipse shaped nodes are ROS topics, and arrows are the messages with their topic names.
 
 ## Example Run <a name="example-run"></a>
+
+https://drive.google.com/file/d/1RxHzOKrLZaBNFIk37eyGU5mK3Vd8hqmP/view?usp=sharing
 
