@@ -155,3 +155,14 @@ There will be a GUI for the user to define the space information and problem def
 ### Current Functionality <a name="current-functionality"></a>
 
 Currently, there is only one controller (PX4 for Iris) and motion planner (RRT* in OMPL). The user can only define the start and goal pose by CLI. And place the obstacles by editing the obstacles.yaml file in the config folder. The only obstacle shape that is supported is a cylinder whose height, radius, and position can be defined in the obstacles.yaml file.
+
+- iris_controller Class: can be found in the include/controllers/iris_controller.hpp file. It initializes the relevant topics to control the drone, and takes off the drone.
+
+- OMPLPlanner Class: can be found in the include/planners/OMPLPlanner.hpp file. It takes problem definition from CLI, calculates the waypoints using OMPL, and publishes them to the controller one by one.
+
+Here is the graph of information flow:
+
+![image](./images/Information-Flow.png)
+
+## Example Run <a name="example-run"></a>
+
