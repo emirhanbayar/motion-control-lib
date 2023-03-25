@@ -123,7 +123,7 @@ rosrun quadcopter_controller motion_planner
 ## Structure <a name="structure"></a>
 
 ### Basic System <a name="basic-system"></a>
-A diagram of the overall structure can be described as follows (drawn using diagrams.net):
+A diagram of the overall structure can be described as follows (drawn using [diagrams.net](https://www.diagrams.net/)):
 
 ![image](./images/System-Structure.png)
 
