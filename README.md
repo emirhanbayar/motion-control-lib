@@ -123,7 +123,7 @@ rosrun quadcopter_controller motion_planner
 ## Structure <a name="structure"></a>
 
 ### Basic System <a name="basic-system"></a>
-A diagram of the overall structure of a basic Quadcopter Simulation system can be described as follows:
+A diagram of the overall structure can be described as follows (drawn using diagrams.net):
 
 ![image](./images/System-Structure.png)
 
