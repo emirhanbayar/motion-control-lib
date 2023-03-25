@@ -1,6 +1,8 @@
 # Motion & Control Library
 
-The Aim of this project is to create an interface to simulate a combination of different motion planners on different quadcopters (so using different controllers) on various maps. For now, the project is in its early stages and only supports a single quadcopter (iris) with a single controller (PX4) and a single motion planner (OMPL), and has no proper UI. 
+The Aim of this project is to create an interface to simulate a combination of different motion planners on different quadcopters (so using different controllers) on various maps. For now, the project is in its early stages and only supports a single quadcopter (iris) with a single controller (PX4) and a single motion planner (OMPL). 
+
+An example run: https://drive.google.com/file/d/1RxHzOKrLZaBNFIk37eyGU5mK3Vd8hqmP/view?usp=sharing
 
 ## Requirements
 Ubuntu 20.04, ROS Noetic, Gazebo 9, OMPL, PX4-Autopilot
@@ -13,7 +15,6 @@ Ubuntu 20.04, ROS Noetic, Gazebo 9, OMPL, PX4-Autopilot
     - [Basic System](#basic-system)
     - [Planned Functionality](#planned-functionality)
     - [Current Functionality](#current-functionality)
-- [Example Run](#example-run)
 
 ## Installation <a name="installation"></a>
 
@@ -166,8 +167,3 @@ Here is the graph of information flow:
 ![image](./images/Info-Flow.png)
 
 Where ellipse shaped nodes are ROS topics, and arrows are the messages with their topic names.
-
-## Example Run <a name="example-run"></a>
-
-https://drive.google.com/file/d/1RxHzOKrLZaBNFIk37eyGU5mK3Vd8hqmP/view?usp=sharing
-
