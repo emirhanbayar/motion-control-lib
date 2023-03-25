@@ -140,11 +140,11 @@ You can refer to [this tutorial](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=
 
 Considering the fact that each quadcopter has its own physical and dynamic attributes, the controller is planned to be designed as a removable and pluggable black box. However, controllers have similar functionalities: 1. calculating the instant velocity vector, 2. sending motor values to get this velocity. For now, our system only supports the PX4 controller. You can examine some common controller diagrams:
 
-- [Pixhawk4] (https://docs.px4.io/main/en/flight_stack/controller_diagrams.html)
+- [Pixhawk4](https://docs.px4.io/main/en/flight_stack/controller_diagrams.html)
 
-- [Crazyflie] (https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/functional-areas/sensor-to-control/controllers/)
+- [Crazyflie](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/functional-areas/sensor-to-control/controllers/)
 
-- [Ardupilot] (https://ardupilot.org/dev/docs/apmcopter-programming-attitude-control-2.html)
+- [Ardupilot](https://ardupilot.org/dev/docs/apmcopter-programming-attitude-control-2.html)
 
 If one is to design its own drone, she/he must design the controller as well.
 
