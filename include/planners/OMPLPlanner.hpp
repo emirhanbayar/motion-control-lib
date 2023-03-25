@@ -210,11 +210,13 @@ float distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 
 void OMPLPlanner::navigate()
 {
+    // Publish to each waypoint one by one.
         for (int i = 0; i < waypoints.size(); i++)
         {   
             ROS_INFO("Going to waypoint %f %f %f", waypoints[i].pose.position.x, waypoints[i].pose.position.y, waypoints[i].pose.position.z);
             while(distance(waypoints[i], current_pose) > 0.1)
             {
+
                 waypoint_pub.publish(waypoints[i]);
                 ros::spinOnce();
             }

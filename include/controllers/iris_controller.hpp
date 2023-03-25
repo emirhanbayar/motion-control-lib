@@ -46,18 +46,31 @@ iris_controller::iris_controller(ros::NodeHandle nh, ros::Rate rate = 20.0)
     this->nh = nh;
     this->rate = rate;
 
+    // Subscriber for getting current pose of the iris
     this->pose_sub = nh.subscribe<geometry_msgs::PoseStamped>
             ("/uav0/mavros/local_position/pose", 10, &iris_controller::pose_cb, this);
+    
+    // Subscriber for getting current state of the iris. This is used to check if the iris is connected.
     this->state_sub = nh.subscribe<mavros_msgs::State>
             ("/uav0/mavros/state", 10, &iris_controller::state_cb, this);
+
+    // Subscriber for getting the current waypoint from the planner
     this->waypoint_sub = nh.subscribe<geometry_msgs::PoseStamped>
             ("/waypoints", 10, &iris_controller::waypoint_cb, this);
+    
+    // Service for sending the arming (getting the iris drone ready for commands) command to the iris
     this->arming_client = nh.serviceClient<mavros_msgs::CommandBool>
             ("/uav0/mavros/cmd/arming");
+
+    // Service for sending the set OFFBOARD mode command to the iris
     this->set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
             ("/uav0/mavros/set_mode");
+    
+    // Publisher for sending the current pose of the iris to the planner
     this->pose_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("/uav0/mavros/setpoint_position/local", 10);
+
+    // Publisher for sending the current waypoint to the iris
     this->waypoint_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("/waypoints", 10);
 }
@@ -68,16 +81,19 @@ iris_controller::~iris_controller()
 
 void iris_controller::state_cb(const mavros_msgs::State::ConstPtr& msg)
 {
+    // Callback function for the state subscriber
     this->current_state = *msg;
 }
 
 void iris_controller::pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
+    // Callback function for the pose subscriber
     pose = *msg;
 }
 
 void iris_controller::waypoint_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
+    // Callback function for the waypoint subscriber
     waypoint = *msg;
 }
 
@@ -88,11 +104,15 @@ float distance(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b)
 
 void iris_controller::go(geometry_msgs::PoseStamped target)
 {
+    // Iris controller is programmed to go to the current waypoint. Thus, publishing the target as a waypoint ensures that the iris will go to the target.
     waypoint_pub.publish(target);
 }
 
 void iris_controller::takeoff(int altitude)
 {
+    /* This is the function for taking off the iris drone, and for starting main loop of our controller               */
+    /* In the main loop, the iris drone will go to the current waypoint, and will wait until it reaches the waypoint. */
+
     // wait for FCU connection
     while(ros::ok() && !current_state.connected){
         ros::spinOnce();
@@ -112,18 +132,25 @@ void iris_controller::takeoff(int altitude)
         rate.sleep();
     }
 
+    // Set the iris drone to OFFBOARD mode. OFFBOARD mode is a mode in which the iris drone can be controlled by the controller. 
+    //For more information, please refer to https://docs.px4.io/main/en/flight_modes/offboard.html
     mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "OFFBOARD";
 
+    // Set the iris drone to armed mode. Armed mode is a mode in which the iris drone is ready to take off.
+    // For more information, please refer to https://ardupilot.org/copter/docs/arming_the_motors.html
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
 
+    // Main loop of the controller
     while(ros::ok()){
         
+        // This is a trick to initialize the iris drone to the current waypoint. This is necessary because the iris drone will not go to the current waypoint if it is not initialized.
         waypoint_pub.publish(waypoint);
 
+        // If the iris drone is not in OFFBOARD mode, send the OFFBOARD mode command to the iris drone
         if( current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(5.0))){
             if( set_mode_client.call(offb_set_mode) &&
@@ -131,7 +158,10 @@ void iris_controller::takeoff(int altitude)
                 ROS_INFO("Offboard enabled");
             }
             last_request = ros::Time::now();
-        } else {
+        } 
+
+        // If the iris drone is not armed, send the arming command to the iris drone
+        else {
             if( !current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(5.0))){
                 if( arming_client.call(arm_cmd) &&
@@ -142,8 +172,11 @@ void iris_controller::takeoff(int altitude)
             }
         }
 
+        // If the iris drone is in OFFBOARD mode and is armed, send the current waypoint to the iris drone
         pose_pub.publish(waypoint);
 
+
+        // If the iris drone is within 0.1 meters of the current waypoint, stop the iris drone
         ros::spinOnce();
         rate.sleep();
     }
