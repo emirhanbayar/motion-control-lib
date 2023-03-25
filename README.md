@@ -1,6 +1,6 @@
 # Motion & Control Library
 
-The Aim of this project is to create an interface to simulate a combination of different motion planners on different quadcopters (so using different controllers) on various maps. For now, the project is in its early stages and only supports a single quadcopter (iris) with a single controller (PX4) and a single motion planner (OMPL). 
+The Aim of this project is to create an interface to simulate a combination of different motion planners on different quadcopters (so using different controllers) on various maps. For now, the project is in its early stages and only supports a single quadcopter (iris) with a single controller (PX4) and a single motion planner (OMPL), and has no proper UI. 
 
 ## Requirements
 Ubuntu 20.04, ROS Noetic, Gazebo 9, OMPL, PX4-Autopilot
