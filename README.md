@@ -1,6 +1,6 @@
 # Motion & Control Library
 
-The Aim of this project is to create an interface to simulate a combination of different motion planners on different quadcopters (so using different controllers) on various maps. For now, the project is in its early stages and only supports a single quadcopter (iris) with a single controller (PX4) and a single motion planner (RRT* using OMPL). 
+The aim of this project is to create an interface to simulate a combination of different motion planners on different quadcopters (so using different controllers) on various maps. For now, the project is in its early stages and only supports a single quadcopter (iris) with a single controller (PX4) and a single motion planner (RRT* using OMPL). 
 
 An example run: https://drive.google.com/file/d/1RxHzOKrLZaBNFIk37eyGU5mK3Vd8hqmP/view?usp=sharing
 
